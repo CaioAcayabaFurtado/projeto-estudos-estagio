@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import os
 
 # Inicializar SparkSession
-spark = SparkSession.builder.appName("CapturaDeDados").getOrCreate()
+spark = SparkSession.builder.appName("CapturaTratamentoDeDados").getOrCreate()
 
 # Carregar variáveis de ambiente do .env
 load_dotenv()
@@ -53,4 +53,33 @@ def capturar_dados(escolha, caminho_ou_view):
         print("Fonte de dados inválida. Escolha 'csv' ou 'db'.")
         return None
         
+# ==============================================================
+# Funçao de Data Cleaning
+
+def limpar_base_dados(base_dados):
+
+    # Transformar NA em 0
+    base_dados = base_dados.fillna(0)
+
+    # Remover linhas com valor NA
+    # base_dados = base_dados.dropna()
+
+    # Calcular Q1 e Q3
+    quartis = base_dados.select(
+        percentile_approx("Nome da Coluna", 0.25).alias("Q1"),
+        percentile_approx("Nome da Coluna", 0.75).alias("Q3")
+    ).collect()
+
+    q1 = quartis[0]["Q1"]
+    q3 = quartis[0]["Q3"]
+
+    # Calcular IQR, limites inferior e superior
+    iqr = q3 - q1
+    lower_limit = q1 - 1.5 * iqr
+    upper_limit = q3 + 1.5 * iqr
+
+    base_dados = base_dados.filter((col("Nome da Coluna") >= lower_limit) & (col("Nome da Coluna") <= upper_limit))
+
+    return base_dados
+
 # ==============================================================

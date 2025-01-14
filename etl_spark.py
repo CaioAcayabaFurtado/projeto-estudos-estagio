@@ -14,9 +14,11 @@ def main():
 
     caminho_ou_view = input("Digite o caminho do arquivo CSV ou nome da view: ").strip()
     base_dados = capturar_dados(escolha, caminho_ou_view)
+    base_dados_filtrada = limpar_base_dados(base_dados)
 
     if base_dados is not None:
         base_dados.show()
+        base_dados_filtrada.show()
     else:
         print("Não foi possível capturar os dados.")
 
